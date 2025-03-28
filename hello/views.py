@@ -2,7 +2,7 @@ import os
 import logging
 import requests
 
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 
 from .models import Greeting
 
@@ -17,6 +17,7 @@ def authorize(request):
     CLIENT_ID = os.environ.get('RIPPLING_CLIENT_ID', '')
     CLIENT_SECRET = os.environ.get('RIPPLING_CLIENT_SECRET', '')
     TOKEN_URL = os.environ.get('RIPPLING_TOKEN_URL', '')
+    # This URL is the Partner's URL that Rippling will send the authorization request to
     # 'https://warm-taiga-61775-50933b0ebe0c.herokuapp.com/authorize'
     redirect_uri = os.environ.get('DEMO_WEBSITE_REDIRECT_URL', '')
 
@@ -31,6 +32,9 @@ def authorize(request):
 
     headers = get_basic_auth_header(CLIENT_ID, CLIENT_SECRET)
     code = request.GET.get('code')
+
+    # This is the URL that partner should use to redirect back to Rippling after completing the authorization
+    rippling_redirect_uri = request.GET.get('redirect_uri')
 
     data = {
         'grant_type': 'authorization_code',
@@ -64,7 +68,7 @@ def authorize(request):
     company_info = get_company_info(access_token)
     logger.info(f'Company info: {company_info}')
 
-    return render(request, "authorize.html")
+    return redirect(rippling_redirect_uri)
 
 
 def db(request):
